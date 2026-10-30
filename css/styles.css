@@ -244,6 +244,7 @@ h1, h2, h3, h4 {
   background: var(--green-soft);
   border-radius: var(--radius-l);
   padding: clamp(28px, 4vw, 48px);
+  perspective: 1200px;
 }
 .browser {
   background: #fff;
@@ -252,7 +253,14 @@ h1, h2, h3, h4 {
   box-shadow: 0 30px 60px -36px rgba(20, 27, 23, 0.4);
   max-width: 980px;
   margin-inline: auto;
+  transform: scale(0.95);           /* load entrance start; JS ramps to 1 */
+  transform-origin: center;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  will-change: transform, box-shadow;
+  transition: box-shadow 0.5s var(--ease);
 }
+.phone { will-change: transform; }
 .browser__bar {
   text-align: center;
   font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
@@ -700,13 +708,7 @@ html.has-cursor select, html.has-cursor [contenteditable] { cursor: text !import
 .btn--light:hover   { background: #fff; box-shadow: var(--shadow); }
 .btn--dark:hover    { background: var(--ink); }
 
-/* --- Floating mockups / decorative motion --- */
-@media (prefers-reduced-motion: no-preference) {
-  .browser { animation: floatA 7s ease-in-out infinite; }
-  .phone { animation: floatB 6s ease-in-out 0.4s infinite; }
-}
-@keyframes floatA { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
-@keyframes floatB { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(9px); } }
+/* --- Mockup float / 3D tilt / parallax are driven in JS (conceptFX) --- */
 
 /* --- Card icon micro-interaction on hover --- */
 .card__icon svg { transition: transform 0.45s var(--ease); transform-origin: center bottom; }
@@ -765,7 +767,8 @@ html.has-cursor select, html.has-cursor [contenteditable] { cursor: text !import
   html { scroll-behavior: auto; }
   .reveal { opacity: 1; transform: none; }
   body { animation: none; opacity: 1; }
-  .browser, .phone { animation: none; }
+  .browser { animation: none; transform: scale(1); }
+  .phone { animation: none; transform: none; }
   .acc-panel__inner { opacity: 1; }
   .hero__aura span { animation: none; }
   .hero__title .word > i { opacity: 1; transform: none; }

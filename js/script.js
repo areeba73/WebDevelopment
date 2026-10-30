@@ -176,31 +176,39 @@
     var W = 0, H = 0, parts = [], raf = null, running = false, last = 0;
     var sp = 0, ticking = false; /* scroll progress 0..1 */
 
+    /* pre-rendered glow sprite so hundreds of particles stay cheap (drawImage) */
+    var sprite = document.createElement("canvas");
+    sprite.width = sprite.height = 24;
+    var sctx = sprite.getContext("2d");
+    var sg = sctx.createRadialGradient(12, 12, 0, 12, 12, 12);
+    sg.addColorStop(0, "rgba(" + R + "," + G + "," + B + ",1)");
+    sg.addColorStop(0.45, "rgba(" + R + "," + G + "," + B + ",0.5)");
+    sg.addColorStop(1, "rgba(" + R + "," + G + "," + B + ",0)");
+    sctx.fillStyle = sg; sctx.fillRect(0, 0, 24, 24);
+
     function rnd(a, b) { return a + Math.random() * (b - a); }
     function build() {
-      var count = Math.round((W * H) / 13000);
-      count = Math.max(22, Math.min(count, 110));
+      var count = Math.round((W * H) / 4200);       /* dense field of tiny particles */
+      count = Math.max(60, Math.min(count, 340));
       parts = [];
       for (var i = 0; i < count; i++) {
-        var big = Math.random() < 0.12;
+        var big = Math.random() < 0.08;
+        var ang = Math.random() * 6.2832;           /* random heading */
+        var spd = rnd(0.45, 1.15);                  /* rapid, varied speed */
         parts.push({
           x: Math.random() * W, y: Math.random() * H,
-          r: big ? rnd(1.8, 3) : rnd(0.6, 1.6),
-          vx: rnd(-0.12, 0.12), vy: rnd(-0.26, -0.05),
-          base: big ? rnd(0.32, 0.55) : rnd(0.12, 0.38),
-          tw: Math.random() * Math.PI * 2, tws: rnd(0.6, 1.5)
+          r: big ? rnd(1.4, 2.2) : rnd(0.5, 1.2),   /* tiny */
+          vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd,
+          wx: Math.random() * 6.2832, wy: Math.random() * 6.2832, /* wander phases */
+          base: big ? rnd(0.4, 0.7) : rnd(0.2, 0.5),
+          tw: Math.random() * Math.PI * 2, tws: rnd(0.8, 2)
         });
       }
     }
     function dot(x, y, r, a) {
-      var rad = r * 5;
-      var g = ctx.createRadialGradient(x, y, 0, x, y, rad);
-      g.addColorStop(0, "rgba(" + R + "," + G + "," + B + "," + a + ")");
-      g.addColorStop(1, "rgba(" + R + "," + G + "," + B + ",0)");
-      ctx.fillStyle = g;
-      ctx.beginPath(); ctx.arc(x, y, rad, 0, 6.2832); ctx.fill();
-      ctx.fillStyle = "rgba(" + R + "," + G + "," + B + "," + Math.min(a * 1.7, 0.85) + ")";
-      ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill();
+      var d = r * 6;
+      ctx.globalAlpha = a > 1 ? 1 : a;
+      ctx.drawImage(sprite, x - d / 2, y - d / 2, d, d);
     }
     function resize() {
       W = hero.clientWidth; H = hero.clientHeight;
@@ -213,6 +221,7 @@
     function staticDraw() {
       ctx.clearRect(0, 0, W, H);
       for (var i = 0; i < parts.length; i++) dot(parts[i].x, parts[i].y, parts[i].r, parts[i].base * 0.8);
+      ctx.globalAlpha = 1;
     }
     function frame(now) {
       var dt = Math.min((now - last) / 16.67, 3); last = now;
@@ -224,14 +233,18 @@
       ctx.clearRect(0, 0, W, H);
       for (var i = 0; i < parts.length; i++) {
         var p = parts[i];
-        p.x += p.vx * dt; p.y += p.vy * dt; p.tw += 0.02 * p.tws * dt;
-        if (p.y < -6) { p.y = H + 6; p.x = Math.random() * W; }
+        /* base heading + slow sinusoidal wander = continuous multi-directional drift */
+        p.x += (p.vx + Math.sin(now * 0.0003 + p.wx) * 0.14) * dt;
+        p.y += (p.vy + Math.cos(now * 0.00028 + p.wy) * 0.14) * dt;
+        p.tw += 0.02 * p.tws * dt;
         if (p.x < -6) p.x = W + 6; else if (p.x > W + 6) p.x = -6;
+        if (p.y < -6) p.y = H + 6; else if (p.y > H + 6) p.y = -6;
         var tw = 0.5 + 0.5 * (0.5 + 0.5 * Math.sin(p.tw));
         var dx = cx + (p.x - cx) * spread;
         var dy = cy + (p.y - cy) * spread - sp * 70;
         dot(dx, dy, p.r * grow, p.base * tw * br);
       }
+      ctx.globalAlpha = 1;
       raf = requestAnimationFrame(frame);
     }
     function start() { if (running || reduce) return; running = true; last = performance.now(); raf = requestAnimationFrame(frame); }
@@ -259,6 +272,72 @@
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", applyScroll);
     applyScroll();
+  })();
+
+  /* ---------- Concept card: load scale-up, 3D tilt, phone parallax ---------- */
+  (function conceptFX() {
+    var concept = document.querySelector(".concept");
+    if (!concept) return;
+    var browser = concept.querySelector(".browser");
+    var phone = concept.querySelector(".phone");
+    if (!browser) return;
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var fine = window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    if (reduce) { browser.style.transform = "scale(1)"; if (phone) phone.style.transform = "none"; return; }
+
+    var scale = 0.95, rx = 0, ry = 0, rxT = 0, ryT = 0, parY = 0, parYT = 0;
+    var loadStart = null, cTick = false;
+
+    /* load scale-up 0.95 -> 1 when the card enters view */
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(function (es, obs) {
+        es.forEach(function (e) { if (e.isIntersecting) { loadStart = performance.now(); obs.disconnect(); } });
+      }, { threshold: 0.25 }).observe(concept);
+    } else { loadStart = performance.now(); }
+
+    /* 3D tilt toward the cursor (fine pointer only) */
+    if (fine) {
+      browser.addEventListener("mousemove", function (e) {
+        var r = browser.getBoundingClientRect();
+        rxT = -((e.clientY - r.top) / r.height - 0.5) * 8;
+        ryT = ((e.clientX - r.left) / r.width - 0.5) * 8;
+      });
+      browser.addEventListener("mouseenter", function () {
+        browser.style.boxShadow = "0 44px 90px -42px rgba(20,27,23,0.55)";
+      });
+      browser.addEventListener("mouseleave", function () {
+        rxT = 0; ryT = 0; browser.style.boxShadow = "";
+      });
+    }
+
+    /* phone parallax from scroll (moves a bit faster than the background) */
+    function computePar() {
+      cTick = false;
+      var r = concept.getBoundingClientRect();
+      var vh = window.innerHeight || 1;
+      var center = r.top + r.height / 2;
+      var prog = (vh / 2 - center) / (vh / 2 + r.height / 2);
+      parYT = -prog * 42;
+    }
+    window.addEventListener("scroll", function () { if (!cTick) { cTick = true; requestAnimationFrame(computePar); } }, { passive: true });
+    window.addEventListener("resize", computePar);
+    computePar();
+
+    (function loop(now) {
+      if (loadStart != null) {
+        var p = Math.min((now - loadStart) / 650, 1);
+        scale = 0.95 + 0.05 * (1 - Math.pow(1 - p, 3));
+      }
+      rx += (rxT - rx) * 0.12;
+      ry += (ryT - ry) * 0.12;
+      parY += (parYT - parY) * 0.1;
+      var fy = Math.sin(now / 1400) * 4;        /* gentle card float */
+      var pf = Math.sin(now / 1200 + 1) * 6;    /* gentle phone float */
+      browser.style.transform = "rotateX(" + rx.toFixed(2) + "deg) rotateY(" + ry.toFixed(2) +
+        "deg) scale(" + scale.toFixed(3) + ") translateY(" + fy.toFixed(1) + "px)";
+      if (phone) phone.style.transform = "translateY(" + (parY + pf).toFixed(1) + "px)";
+      requestAnimationFrame(loop);
+    })(performance.now());
   })();
 
   /* ---------- Sticky header shadow on scroll ---------- */
