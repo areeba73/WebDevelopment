@@ -603,6 +603,26 @@ body.is-leaving { opacity: 0; transition: opacity 0.32s var(--ease); }
   background: radial-gradient(circle at center, rgba(99, 125, 105, 0.18), rgba(99, 125, 105, 0) 70%);
   animation: auraDrift2 26s ease-in-out infinite;
 }
+
+/* animated particle field (drifting, twinkling) behind hero content */
+.hero__particles {
+  position: absolute; inset: 0; z-index: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  display: block;
+  transform-origin: 50% 42%;
+  will-change: transform;
+}
+
+/* scroll-linked hero motion (home): content parallaxes up + fades,
+   aura fades — the particle zoom/brighten is driven in JS.
+   --hp (0 at top → 1 when the hero is scrolled past) is set by JS. */
+.hero > .container {
+  transform: translate3d(0, calc(var(--hp, 0) * -100px), 0);
+  opacity: calc(1 - var(--hp, 0) * 1.35);
+  will-change: transform, opacity;
+}
+.hero .hero__aura { opacity: calc(1 - var(--hp, 0) * 0.85); }
 @keyframes auraDrift1 {
   0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
   50% { transform: translate3d(4%, 6%, 0) scale(1.08); }
@@ -647,9 +667,38 @@ html.has-cursor, html.has-cursor * { cursor: none !important; }
 html.has-cursor input, html.has-cursor textarea,
 html.has-cursor select, html.has-cursor [contenteditable] { cursor: text !important; }
 
-/* outline buttons fill on hover (reference-style), using the theme accent */
-.btn--ghost:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
-.btn--ghost:hover .arrow { color: #fff; }
+/* =========================================================
+   Button hover: colour fill expands from the cursor + label above
+   ========================================================= */
+.btn { position: relative; overflow: hidden; isolation: isolate; --fill: var(--accent); }
+.btn__t, .btn > svg { position: relative; z-index: 1; }
+.btn::before {
+  content: "";
+  position: absolute;
+  left: var(--mx, 50%);
+  top: var(--my, 100%);
+  width: 0; aspect-ratio: 1 / 1;
+  background: var(--fill);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.5s var(--ease);
+  z-index: 0;
+  pointer-events: none;
+}
+.btn:hover::before { width: 320%; }
+
+/* per-variant fill colour (keeps each button's own palette) */
+.btn--primary { --fill: var(--accent-hover); }
+.btn--ghost   { --fill: var(--accent); }
+.btn--light   { --fill: #e4eafe; }
+.btn--dark    { --fill: #000; }
+
+/* keep the rest-state background during hover so the fill does the work */
+.btn--primary:hover { background: var(--accent); box-shadow: 0 12px 24px -12px rgba(35, 77, 232, 0.6); }
+.btn--ghost:hover   { background: var(--surface); border-color: var(--line-strong); }
+.btn--ghost:hover .btn__t, .btn--ghost:hover .arrow { color: #fff; }
+.btn--light:hover   { background: #fff; box-shadow: var(--shadow); }
+.btn--dark:hover    { background: var(--ink); }
 
 /* --- Floating mockups / decorative motion --- */
 @media (prefers-reduced-motion: no-preference) {

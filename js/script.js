@@ -7,6 +7,28 @@
   var finePointer = window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
   var reduceMotionGlobal = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  /* ---------- Buttons: wrap label + set fill origin from cursor ---------- */
+  document.querySelectorAll(".btn").forEach(function (btn) {
+    if (!btn.querySelector(".btn__t")) {
+      var span = document.createElement("span");
+      span.className = "btn__t";
+      var moved = false, i = 0, n;
+      while (i < btn.childNodes.length) {
+        n = btn.childNodes[i];
+        if (n.nodeType === 3 && n.nodeValue.trim()) { span.appendChild(n); moved = true; }
+        else { i++; }
+      }
+      if (moved) btn.insertBefore(span, btn.firstChild);
+    }
+    function origin(e) {
+      var r = btn.getBoundingClientRect();
+      btn.style.setProperty("--mx", (e.clientX - r.left) + "px");
+      btn.style.setProperty("--my", (e.clientY - r.top) + "px");
+    }
+    btn.addEventListener("mouseenter", origin);
+    btn.addEventListener("mouseleave", origin);
+  });
+
   /* ---------- Custom round cursor (fine pointer, motion allowed) ---------- */
   if (finePointer && !reduceMotionGlobal) {
     var dot = document.createElement("div");
@@ -60,7 +82,8 @@
       return null;
     }
     function scramble(el) {
-      var node = firstTextNode(el);
+      var host = (el.querySelector && el.querySelector(".btn__t")) || el;
+      var node = firstTextNode(host);
       if (!node) return;
       if (node._orig == null) node._orig = node.nodeValue;
       var original = node._orig;
@@ -76,25 +99,32 @@
         el._wLocked = true;
       }
       cancelAnimationFrame(el._raf);
-      var frame = 0, total = Math.min(Math.round(chars.length * 1.4), 24);
-      function step() {
-        var reveal = Math.floor((frame / total) * chars.length * 1.5);
-        var out = "";
-        for (var j = 0; j < chars.length; j++) {
-          if (chars[j] === " ") { out += " "; }
-          else if (j < reveal) { out += chars[j]; }
-          else { out += SC.charAt(Math.floor(Math.random() * SC.length)); }
+      /* time-based so letters change at a calm, elegant cadence */
+      var start = performance.now();
+      var DUR = Math.min(420 + chars.length * 20, 760); /* total resolve time (ms) */
+      var SWAP = 58;      /* ms between random-glyph changes */
+      var lastSwap = -1e9;
+      var disp = chars.slice();
+      function step(now) {
+        var t = Math.min((now - start) / DUR, 1);
+        var reveal = Math.floor(t * chars.length);
+        if (now - lastSwap >= SWAP) {
+          lastSwap = now;
+          for (var j = reveal; j < chars.length; j++) {
+            disp[j] = chars[j] === " " ? " " : SC.charAt(Math.floor(Math.random() * SC.length));
+          }
         }
-        node.nodeValue = out;
-        frame++;
-        if (frame <= total) { el._raf = requestAnimationFrame(step); }
+        for (var k = 0; k < reveal; k++) disp[k] = chars[k];
+        node.nodeValue = disp.join("");
+        if (t < 1) { el._raf = requestAnimationFrame(step); }
         else { node.nodeValue = original; }
       }
       el._raf = requestAnimationFrame(step);
     }
     function restore(el) {
       cancelAnimationFrame(el._raf);
-      var node = firstTextNode(el);
+      var host = (el.querySelector && el.querySelector(".btn__t")) || el;
+      var node = firstTextNode(host);
       if (node && node._orig != null) node.nodeValue = node._orig;
       if (el._wLocked) {
         el.style.width = "";
@@ -132,6 +162,104 @@
       });
     }
   }
+
+  /* ---------- Hero background: drifting, twinkling particle field ---------- */
+  (function heroParticles() {
+    var canvas = document.querySelector(".hero__particles");
+    if (!canvas) return;
+    var ctx = canvas.getContext && canvas.getContext("2d");
+    if (!ctx) return;
+    var hero = canvas.parentElement;
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var R = 35, G = 77, B = 232; /* theme accent #234de8 */
+    var W = 0, H = 0, parts = [], raf = null, running = false, last = 0;
+    var sp = 0, ticking = false; /* scroll progress 0..1 */
+
+    function rnd(a, b) { return a + Math.random() * (b - a); }
+    function build() {
+      var count = Math.round((W * H) / 13000);
+      count = Math.max(22, Math.min(count, 110));
+      parts = [];
+      for (var i = 0; i < count; i++) {
+        var big = Math.random() < 0.12;
+        parts.push({
+          x: Math.random() * W, y: Math.random() * H,
+          r: big ? rnd(1.8, 3) : rnd(0.6, 1.6),
+          vx: rnd(-0.12, 0.12), vy: rnd(-0.26, -0.05),
+          base: big ? rnd(0.32, 0.55) : rnd(0.12, 0.38),
+          tw: Math.random() * Math.PI * 2, tws: rnd(0.6, 1.5)
+        });
+      }
+    }
+    function dot(x, y, r, a) {
+      var rad = r * 5;
+      var g = ctx.createRadialGradient(x, y, 0, x, y, rad);
+      g.addColorStop(0, "rgba(" + R + "," + G + "," + B + "," + a + ")");
+      g.addColorStop(1, "rgba(" + R + "," + G + "," + B + ",0)");
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(x, y, rad, 0, 6.2832); ctx.fill();
+      ctx.fillStyle = "rgba(" + R + "," + G + "," + B + "," + Math.min(a * 1.7, 0.85) + ")";
+      ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill();
+    }
+    function resize() {
+      W = hero.clientWidth; H = hero.clientHeight;
+      canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+      canvas.style.width = W + "px"; canvas.style.height = H + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      build();
+      if (reduce) staticDraw();
+    }
+    function staticDraw() {
+      ctx.clearRect(0, 0, W, H);
+      for (var i = 0; i < parts.length; i++) dot(parts[i].x, parts[i].y, parts[i].r, parts[i].base * 0.8);
+    }
+    function frame(now) {
+      var dt = Math.min((now - last) / 16.67, 3); last = now;
+      /* scroll "fly-through": particles grow, brighten and spread from centre */
+      var br = 1 + sp * 3.2;
+      var grow = 1 + sp * 5;
+      var spread = 1 + sp * 1.4;
+      var cx = W / 2, cy = H * 0.42;
+      ctx.clearRect(0, 0, W, H);
+      for (var i = 0; i < parts.length; i++) {
+        var p = parts[i];
+        p.x += p.vx * dt; p.y += p.vy * dt; p.tw += 0.02 * p.tws * dt;
+        if (p.y < -6) { p.y = H + 6; p.x = Math.random() * W; }
+        if (p.x < -6) p.x = W + 6; else if (p.x > W + 6) p.x = -6;
+        var tw = 0.5 + 0.5 * (0.5 + 0.5 * Math.sin(p.tw));
+        var dx = cx + (p.x - cx) * spread;
+        var dy = cy + (p.y - cy) * spread - sp * 70;
+        dot(dx, dy, p.r * grow, p.base * tw * br);
+      }
+      raf = requestAnimationFrame(frame);
+    }
+    function start() { if (running || reduce) return; running = true; last = performance.now(); raf = requestAnimationFrame(frame); }
+    function stop() { running = false; if (raf) cancelAnimationFrame(raf); }
+
+    resize();
+    window.addEventListener("resize", resize);
+    if (reduce) { staticDraw(); return; }
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(function (es) {
+        es.forEach(function (e) { e.isIntersecting ? start() : stop(); });
+      }, { threshold: 0 }).observe(hero);
+    } else { start(); }
+
+    /* scroll-linked motion: content fades/parallaxes up, particles zoom + brighten */
+    function applyScroll() {
+      ticking = false;
+      var h = hero.offsetHeight || 1;
+      var y = window.pageYOffset || document.documentElement.scrollTop || 0;
+      sp = Math.max(0, Math.min(y / h, 1));
+      hero.style.setProperty("--hp", sp.toFixed(4));
+      if (!running && sp > 0 && sp < 1) { start(); } /* keep drawing while scrolling the hero */
+    }
+    function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(applyScroll); } }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", applyScroll);
+    applyScroll();
+  })();
 
   /* ---------- Sticky header shadow on scroll ---------- */
   var header = document.querySelector(".site-header");
