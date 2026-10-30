@@ -117,8 +117,8 @@ h1, h2, h3, h4 {
   font-weight: 600;
   font-size: 0.92rem;
   letter-spacing: -0.01em;
-  transition: transform 0.3s var(--ease), background 0.25s var(--ease),
-    color 0.25s var(--ease), border-color 0.25s var(--ease), box-shadow 0.25s var(--ease);
+  transition: transform 0.5s var(--ease), background 0.45s var(--ease),
+    color 0.45s var(--ease), border-color 0.45s var(--ease), box-shadow 0.45s var(--ease);
 }
 .btn:hover { transform: translateY(-2px); }
 .btn:active { transform: translateY(0); }
@@ -585,6 +585,72 @@ body.is-leaving { opacity: 0; transition: opacity 0.32s var(--ease); }
 .reveal.zoom { transform: translateY(22px) scale(0.985); }
 .reveal.zoom.in { transform: none; }
 
+/* --- Hero ambient aura (homepage hero only) --- */
+.hero { position: relative; overflow: hidden; }
+.hero > .container { position: relative; z-index: 1; }
+.hero__aura { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.hero__aura span {
+  position: absolute; display: block; border-radius: 50%;
+  filter: blur(66px); will-change: transform;
+}
+.hero__aura .a1 {
+  width: min(620px, 54vw); aspect-ratio: 1 / 1; top: -14%; left: -6%;
+  background: radial-gradient(circle at center, rgba(35, 77, 232, 0.20), rgba(35, 77, 232, 0) 68%);
+  animation: auraDrift1 20s ease-in-out infinite;
+}
+.hero__aura .a2 {
+  width: min(560px, 50vw); aspect-ratio: 1 / 1; top: 2%; right: -8%;
+  background: radial-gradient(circle at center, rgba(99, 125, 105, 0.18), rgba(99, 125, 105, 0) 70%);
+  animation: auraDrift2 26s ease-in-out infinite;
+}
+@keyframes auraDrift1 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(4%, 6%, 0) scale(1.08); }
+}
+@keyframes auraDrift2 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-5%, 4%, 0) scale(1.1); }
+}
+
+/* --- Hero headline word-by-word rise (wrapped by JS) --- */
+.hero__title .word { display: inline-block; }
+.hero__title .word > i {
+  display: inline-block; font-style: inherit;
+  opacity: 0; transform: translateY(0.5em);
+  transition: opacity 0.9s var(--ease), transform 1.05s var(--ease);
+}
+.hero__title.words-in .word > i { opacity: 1; transform: none; }
+
+/* slower, more gradual hero text entrance (all pages) */
+.hero .reveal, .page-hero .reveal { transition-duration: 1s; }
+
+/* =========================================================
+   CUSTOM CURSOR (fine-pointer devices only; added by JS)
+   ========================================================= */
+.cursor {
+  --x: -100px; --y: -100px; --s: 1;
+  position: fixed; top: 0; left: 0; z-index: 10000;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--accent);
+  border: 1.5px solid var(--accent);
+  pointer-events: none;
+  transform: translate3d(calc(var(--x) - 50%), calc(var(--y) - 50%), 0) scale(var(--s));
+  transition: width 0.28s var(--ease), height 0.28s var(--ease),
+    background-color 0.28s var(--ease), opacity 0.2s var(--ease);
+  will-change: transform;
+}
+.cursor--hover { width: 34px; height: 34px; background: transparent; }
+.cursor--down { --s: 0.78; }
+.cursor--hidden { opacity: 0; }
+
+html.has-cursor, html.has-cursor * { cursor: none !important; }
+html.has-cursor input, html.has-cursor textarea,
+html.has-cursor select, html.has-cursor [contenteditable] { cursor: text !important; }
+
+/* outline buttons fill on hover (reference-style), using the theme accent */
+.btn--ghost:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn--ghost:hover .arrow { color: #fff; }
+
 /* --- Floating mockups / decorative motion --- */
 @media (prefers-reduced-motion: no-preference) {
   .browser { animation: floatA 7s ease-in-out infinite; }
@@ -652,4 +718,6 @@ body.is-leaving { opacity: 0; transition: opacity 0.32s var(--ease); }
   body { animation: none; opacity: 1; }
   .browser, .phone { animation: none; }
   .acc-panel__inner { opacity: 1; }
+  .hero__aura span { animation: none; }
+  .hero__title .word > i { opacity: 1; transform: none; }
 }
