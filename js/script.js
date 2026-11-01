@@ -53,6 +53,10 @@
       } else {
         dot.classList.toggle("cursor--hover", !!(t.closest && t.closest(hoverSel)));
       }
+      /* turn white over blue surfaces; stay blue on white buttons sitting on blue */
+      var overWhiteBtn = t.closest && t.closest(".btn--light");
+      var overBlue = !overWhiteBtn && t.closest && t.closest(".cta-band, .btn--primary, .btn--ghost, .filter.active");
+      dot.classList.toggle("cursor--light", !!overBlue);
     }, { passive: true });
 
     document.addEventListener("mousedown", function () { dot.classList.add("cursor--down"); });
@@ -61,8 +65,8 @@
     window.addEventListener("blur", function () { dot.classList.add("cursor--hidden"); });
 
     (function loop() {
-      cxp += (tx - cxp) * 0.2;
-      cyp += (ty - cyp) * 0.2;
+      cxp += (tx - cxp) * 0.45;
+      cyp += (ty - cyp) * 0.45;
       dot.style.setProperty("--x", cxp + "px");
       dot.style.setProperty("--y", cyp + "px");
       requestAnimationFrame(loop);
