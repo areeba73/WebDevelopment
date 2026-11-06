@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact · Nexum Global Solutions</title>
+  <meta name="description" content="Start a conversation with Nexum Global Solutions. Tell us about your project and request a consultation." />
+  <link rel="icon" href="assets/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://api.fontshare.com" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary">
+      <a class="brand" href="index.html" aria-label="Nexum Global Solutions — home">
+        <img class="brand__logo" src="assets/nexum-logo.webp" alt="Nexum Global Solutions" width="1026" height="339" />
+      </a>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="services.html">Services</a></li>
+        <li><a href="pricing.html">Pricing</a></li>
+        <li><a href="contact.html" class="active">Contact</a></li>
+        <li><a href="about.html">About Us</a></li>
+      </ul>
+      <div class="nav-actions">
+        <a class="btn btn--primary" href="https://calendly.com/areebarasheed0311/30min" target="_blank" rel="noopener">Book a Consultation</a>
+        <button class="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu"><span></span></button>
+      </div>
+    </nav>
+  </header>
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="index.html">Home</a>
+    <a href="services.html">Services</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="contact.html">Contact</a>
+    <a href="about.html">About Us</a>
+    <a class="btn btn--primary" href="https://calendly.com/areebarasheed0311/30min" target="_blank" rel="noopener">Book a Consultation</a>
+  </div>
+
+  <main>
+    <section class="page-hero">
+      <div class="container">
+        <span class="eyebrow reveal">Start a Conversation</span>
+        <h1 class="hero__title reveal d1">Let's Build Something Great Together.</h1>
+        <p class="hero__text reveal d2">Tell us what you have in mind. Start with your goals, your audience and the kind of website your business needs.</p>
+      </div>
+    </section>
+
+    <section class="section section--tight">
+      <div class="container">
+        <div class="contact-grid">
+          <!-- LEFT -->
+          <div class="contact-info reveal">
+            <h2>A good project starts with a good conversation.</h2>
+            <p>Not sure which solution is right? Use the inquiry form to outline your needs and indicate that you would like a consultation. No commitment, just a clearer starting point.</p>
+            <div class="booking-box">
+              <h3>Book a consultation</h3>
+              <p>Prefer to talk first? Pick a time that works for you and we'll meet online.</p>
+              <a class="btn btn--primary" style="margin-top:14px" href="https://calendly.com/areebarasheed0311/30min" target="_blank" rel="noopener">Book a Consultation</a>
+            </div>
+            <div class="contact-details">
+              <h3>Company contact details</h3>
+              <dl>
+                <div class="row"><strong>Email:</strong> <a class="textlink" href="mailto:info@nexumglobal.solutions" style="display:inline">info@nexumglobal.solutions</a></div>
+                <div class="row"><strong>Phone:</strong> <a class="textlink" href="tel:+923278223333" style="display:inline">+92 327 8223333</a></div>
+                <div class="row"><strong>Hours:</strong> Mon–Fri, 9:00 – 18:00 (PKT)</div>
+              </dl>
+            </div>
+          </div>
+
+          <!-- FORM -->
+          <div class="form reveal d1">
+            <div class="form__body">
+              <p class="form__note">We typically reply by email within 1 business day.</p>
+              <form id="contact-form" data-mailto="info@nexumglobal.solutions" novalidate>
+                <div class="field">
+                  <label for="name">Full name *</label>
+                  <input type="text" id="name" name="name" required />
+                  <span class="error">Please enter your name.</span>
+                </div>
+                <div class="field">
+                  <label for="email">Business email *</label>
+                  <input type="email" id="email" name="email" required />
+                  <span class="error">Please enter a valid email.</span>
+                </div>
+                <div class="field">
+                  <label for="company">Company</label>
+                  <input type="text" id="company" name="company" />
+                </div>
+                <div class="field">
+                  <label for="phone">Phone</label>
+                  <input type="tel" id="phone" name="phone" />
+                </div>
+                <div class="field">
+                  <label for="website-type">Website type</label>
+                  <select id="website-type" name="website-type">
+                    <option>WordPress</option>
+                    <option>Custom Web Development</option>
+                    <option>E-Commerce</option>
+                    <option>Landing Page</option>
+                    <option>Redesign</option>
+                    <option>Not sure yet</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="pages">Estimated pages</label>
+                  <input type="text" id="pages" name="pages" />
+                </div>
+                <div class="field">
+                  <label for="budget">Budget range</label>
+                  <input type="text" id="budget" name="budget" />
+                </div>
+                <div class="field">
+                  <label for="details">Project details *</label>
+                  <textarea id="details" name="details" required></textarea>
+                  <span class="error">Please add a few details.</span>
+                </div>
+                <div class="field">
+                  <label for="preferred">Preferred contact</label>
+                  <select id="preferred" name="preferred">
+                    <option>Email</option>
+                    <option>Phone</option>
+                    <option>Either</option>
+                  </select>
+                </div>
+                <button type="submit" class="btn btn--primary">Send Project Inquiry</button>
+              </form>
+            </div>
+            <div class="form__success">
+              <div class="check"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              <h3>Thank you — your inquiry is on its way.</h3>
+              <p style="color:var(--muted);margin-top:10px">Your email client has opened with your inquiry ready to send to info@nexumglobal.solutions. We'll reply within 1 business day.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <img class="footer-brand__logo" src="assets/nexum-logo.webp" alt="Nexum Global Solutions" width="1026" height="339" />
+          <p>We create powerful digital experiences through thoughtful design, smart development, and technology that helps your business grow.</p>
+            <div class="footer__social">
+            <a href="https://www.linkedin.com/company/nexumglobalsolutions" target="_blank" rel="noopener noreferrer" aria-label="Nexum Global Solutions on LinkedIn"><svg viewBox="0 0 24 24"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.34V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg></a>
+            <a href="https://www.facebook.com/nexumglobalsolutions/" target="_blank" rel="noopener noreferrer" aria-label="Nexum Global Solutions on Facebook"><svg viewBox="0 0 24 24"><path d="M24 12a12 12 0 1 0-13.88 11.85v-8.38H7.08V12h3.04V9.36c0-3 1.79-4.66 4.52-4.66 1.31 0 2.68.24 2.68.24v2.95h-1.51c-1.49 0-1.95.92-1.95 1.87V12h3.32l-.53 3.47h-2.79v8.38A12 12 0 0 0 24 12z"/></svg></a>
+            <a href="https://www.instagram.com/nexumglobalsolutions/" target="_blank" rel="noopener noreferrer" aria-label="Nexum Global Solutions on Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41a3.7 3.7 0 0 1-1.38-.9 3.7 3.7 0 0 1-.9-1.38c-.16-.42-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16M12 0C8.74 0 8.33.01 7.05.07 5.78.13 4.9.33 4.14.63c-.79.3-1.46.72-2.12 1.38C1.36 2.67.94 3.34.63 4.14.33 4.9.13 5.78.07 7.05.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.06 1.27.26 2.15.56 2.91.3.8.72 1.47 1.38 2.13.66.66 1.33 1.08 2.12 1.38.76.3 1.64.5 2.91.56C8.33 23.99 8.74 24 12 24s3.67-.01 4.95-.07c1.27-.06 2.15-.26 2.91-.56.8-.3 1.47-.72 2.13-1.38.66-.66 1.08-1.33 1.38-2.13.3-.76.5-1.64.56-2.91.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.06-1.27-.26-2.15-.56-2.91-.3-.8-.72-1.47-1.38-2.13a5.9 5.9 0 0 0-2.13-1.38c-.76-.3-1.64-.5-2.91-.56C15.67.01 15.26 0 12 0z M12 5.84A6.16 6.16 0 1 0 12 18.16 6.16 6.16 0 0 0 12 5.84zm0 10.16A4 4 0 1 1 12 8a4 4 0 0 1 0 8zm7.85-10.4a1.44 1.44 0 1 1-2.88 0 1.44 1.44 0 0 1 2.88 0z"/></svg></a>
+            <a href="https://www.youtube.com/@nexumglobalsolutions" target="_blank" rel="noopener noreferrer" aria-label="Nexum Global Solutions on YouTube"><svg viewBox="0 0 24 24"><path d="M23.5 6.2a3 3 0 0 0-2.11-2.12C19.5 3.56 12 3.56 12 3.56s-7.5 0-9.39.52A3 3 0 0 0 .5 6.2 31.3 31.3 0 0 0 0 12a31.3 31.3 0 0 0 .5 5.8 3 3 0 0 0 2.11 2.12C4.5 20.44 12 20.44 12 20.44s7.5 0 9.39-.52a3 3 0 0 0 2.11-2.12A31.3 31.3 0 0 0 24 12a31.3 31.3 0 0 0-.5-5.8zM9.6 15.6V8.4l6.2 3.6z"/></svg></a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Services</h4>
+          <ul>
+            <li><a href="services.html#wordpress">WordPress websites</a></li>
+            <li><a href="services.html#custom-development">Custom development</a></li>
+            <li><a href="services.html#e-commerce">E-commerce</a></li>
+            <li><a href="services.html">View all Services</a></li>
+
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Explore</h4>
+          <ul>
+            <li><a href="about.html">About Us</a></li>
+            <li><a href="pricing.html">Pricing</a></li>
+            <li><a href="faq.html">FAQ</a></li>
+            <li><a href="services.html">Services</a></li>
+
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Let's connect</h4>
+          <ul>
+            <li><a href="contact.html">Contact</a></li>
+            <li><a href="https://calendly.com/areebarasheed0311/30min" target="_blank" rel="noopener">Book a call</a></li>
+            <li><a href="mailto:info@nexumglobal.solutions">info@nexumglobal.solutions</a></li>
+            <li><a href="tel:+92 327 8223333">+92 327 8223333</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© <span data-year>2026</span> Web Development. Powered by Nexum.</p>
+        <div class="links">
+          <a href="privacy.html">Privacy Policy</a>
+          <a href="terms.html">Terms of Service</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/script.js"></script>
+</body>
+</html>

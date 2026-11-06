@@ -487,6 +487,35 @@
         if (firstBad) firstBad.focus();
         return;
       }
+      // Build a mailto so the inquiry is actually delivered on a static host
+      var to = form.getAttribute("data-mailto");
+      if (to) {
+        function val(id) {
+          var el = form.querySelector("#" + id);
+          return el && el.value ? el.value.trim() : "";
+        }
+        var name = val("name"), email = val("email"), company = val("company"),
+            phone = val("phone"), wtype = val("website-type"), pages = val("pages"),
+            budget = val("budget"), details = val("details"), pref = val("preferred");
+        var subject = "Project inquiry" + (name ? " — " + name : "");
+        var lines = [
+          "Name: " + name,
+          "Email: " + email,
+          "Company: " + company,
+          "Phone: " + phone,
+          "Website type: " + wtype,
+          "Estimated pages: " + pages,
+          "Budget range: " + budget,
+          "Preferred contact: " + pref,
+          "",
+          "Project details:",
+          details
+        ];
+        var href = "mailto:" + to +
+                   "?subject=" + encodeURIComponent(subject) +
+                   "&body=" + encodeURIComponent(lines.join("\n"));
+        window.location.href = href;
+      }
       form.classList.add("sent");
       var success = form.querySelector(".form__success");
       if (success) success.classList.add("show");
