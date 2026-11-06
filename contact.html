@@ -77,7 +77,15 @@
           <div class="form reveal d1">
             <div class="form__body">
               <p class="form__note">We typically reply by email within 1 business day.</p>
-              <form id="contact-form" data-mailto="info@nexumglobal.solutions" novalidate>
+              <!--
+                data-api-base: single source of truth for the backend origin.
+                Leave empty for same-origin (frontend + API on the same host).
+                For a cross-origin API (Netlify frontend + separate PHP host),
+                set to the API's absolute origin, e.g. https://api-dev.example.com
+                — the JS appends "/api/contact" at request time.
+                No production domain is hardcoded here.
+              -->
+              <form id="contact-form" data-api-base="" novalidate>
                 <div class="field">
                   <label for="name">Full name *</label>
                   <input type="text" id="name" name="name" required />
@@ -108,33 +116,17 @@
                   </select>
                 </div>
                 <div class="field">
-                  <label for="pages">Estimated pages</label>
-                  <input type="text" id="pages" name="pages" />
-                </div>
-                <div class="field">
-                  <label for="budget">Budget range</label>
-                  <input type="text" id="budget" name="budget" />
-                </div>
-                <div class="field">
                   <label for="details">Project details *</label>
                   <textarea id="details" name="details" required></textarea>
                   <span class="error">Please add a few details.</span>
                 </div>
-                <div class="field">
-                  <label for="preferred">Preferred contact</label>
-                  <select id="preferred" name="preferred">
-                    <option>Email</option>
-                    <option>Phone</option>
-                    <option>Either</option>
-                  </select>
-                </div>
-                <button type="submit" class="btn btn--primary">Send Project Inquiry</button>
+                <button type="submit" class="btn btn--primary"><span class="btn__t">Send Project Inquiry</span></button>
               </form>
             </div>
             <div class="form__success">
               <div class="check"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
               <h3>Thank you — your inquiry is on its way.</h3>
-              <p style="color:var(--muted);margin-top:10px">Your email client has opened with your inquiry ready to send to info@nexumglobal.solutions. We'll reply within 1 business day.</p>
+              <p style="color:var(--muted);margin-top:10px">We've received your project details and will reply within 1 business day.</p>
             </div>
           </div>
         </div>

@@ -1,0 +1,26 @@
+{
+  "name": "nexumglobal/nexum-website-api",
+  "description": "Backend API for the Nexum Global Solutions website (contact form, admin). PHP + MongoDB Atlas.",
+  "type": "project",
+  "license": "proprietary",
+  "require": {
+    "php": ">=8.1",
+    "ext-mongodb": "*",
+    "ext-json": "*",
+    "ext-openssl": "*",
+    "mongodb/mongodb": "^1.19",
+    "vlucas/phpdotenv": "^5.6"
+  },
+  "autoload": {
+    "psr-4": {
+      "Nexum\\Api\\": "src/"
+    }
+  },
+  "config": {
+    "sort-packages": true,
+    "optimize-autoloader": true,
+    "preferred-install": "dist"
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}

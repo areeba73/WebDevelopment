@@ -139,6 +139,13 @@
       }
     }
     document.querySelectorAll(scrambleSel).forEach(function (el) {
+      // Skip buttons inside a form card. The scramble effect changes
+      // the text content on every frame; because the font is
+      // proportional, each glyph has a different advance-width, which
+      // causes the inline string to re-measure every frame. Inside a
+      // card that effect reads as the whole form shaking during
+      // submit-button hover.
+      if (el.closest && el.closest(".form")) return;
       el.addEventListener("mouseenter", function () { scramble(el); });
       el.addEventListener("mouseleave", function () { restore(el); });
     });
@@ -460,65 +467,292 @@
     });
   });
 
-  /* ---------- Contact form (demo validation) ---------- */
+  /* ---------- Contact form (fetch -> POST /api/contact) ---------- */
   var form = document.querySelector("#contact-form");
   if (form) {
     var fields = form.querySelectorAll("[required]");
+
     function validateField(field) {
       var wrap = field.closest(".field");
       var ok = field.checkValidity() && field.value.trim() !== "";
       wrap.classList.toggle("invalid", !ok);
+      // Preserve the default error text if the field's own .error span
+      // has been overwritten by a prior server response.
+      var errorEl = wrap.querySelector(".error");
+      if (ok && errorEl && errorEl.dataset.serverMessage) {
+        errorEl.textContent = errorEl.dataset.defaultMessage || errorEl.textContent;
+        delete errorEl.dataset.serverMessage;
+      }
       return ok;
     }
+
     fields.forEach(function (field) {
+      // Snapshot the original .error copy once so we can restore it later
+      var wrap = field.closest(".field");
+      var errorEl = wrap && wrap.querySelector(".error");
+      if (errorEl && !errorEl.dataset.defaultMessage) {
+        errorEl.dataset.defaultMessage = errorEl.textContent;
+      }
       field.addEventListener("blur", function () { validateField(field); });
       field.addEventListener("input", function () {
         if (field.closest(".field").classList.contains("invalid")) validateField(field);
       });
     });
+
+    function getVal(id) {
+      var el = form.querySelector("#" + id);
+      return el && el.value ? el.value.trim() : "";
+    }
+
+    // Map server-side validation field names back to HTML input ids.
+    // ContactInput accepts both "details"/"message" and "website-type"/"service";
+    // the server may surface either name in its `fields` payload.
+    var SERVER_TO_INPUT_ID = {
+      details:      "details",
+      message:      "details",
+      "website-type": "website-type",
+      service:      "website-type",
+      name:         "name",
+      email:        "email",
+      phone:        "phone",
+      company:      "company"
+    };
+
+    function markServerError(key, text) {
+      var inputId = SERVER_TO_INPUT_ID[key] || key;
+      var el = form.querySelector("#" + inputId);
+      if (!el) return;
+      var wrap = el.closest(".field");
+      if (!wrap) return;
+      wrap.classList.add("invalid");
+      var errorEl = wrap.querySelector(".error");
+      if (errorEl) {
+        errorEl.textContent = text;
+        errorEl.dataset.serverMessage = "1";
+      }
+    }
+
+    // Toast notifications — fixed top-right, auto-dismiss. Replaces the
+    // older in-form status banner so that no element ever appears above
+    // or inside the form on error.
+    function ensureToastStack() {
+      var stack = document.querySelector(".toast-stack");
+      if (stack) return stack;
+      stack = document.createElement("div");
+      stack.className = "toast-stack";
+      stack.setAttribute("role", "region");
+      stack.setAttribute("aria-label", "Notifications");
+      document.body.appendChild(stack);
+      return stack;
+    }
+    // Inline SVG checkmark (matches the shape used by .form__success for
+    // visual consistency with the rest of the site).
+    var TOAST_CHECK_SVG =
+      '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+        '<path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" ' +
+        'stroke-linecap="round" stroke-linejoin="round"/>' +
+      '</svg>';
+
+    function toast(message, opts) {
+      opts = opts || {};
+      var kind    = opts.kind    || "error";
+      var timeout = typeof opts.timeout === "number" ? opts.timeout : 5000;
+      var stack   = ensureToastStack();
+
+      var el = document.createElement("div");
+      el.className = "toast toast--" + kind;
+      el.setAttribute("role", kind === "error" ? "alert" : "status");
+      el.setAttribute("aria-live", kind === "error" ? "assertive" : "polite");
+
+      // Success toasts carry a subtle green check; error toasts rely on
+      // the red left-border alone for a quieter look.
+      if (kind === "success") {
+        var icon = document.createElement("span");
+        icon.className = "toast__icon";
+        icon.innerHTML = TOAST_CHECK_SVG;
+        el.appendChild(icon);
+      }
+
+      var msg = document.createElement("div");
+      msg.className = "toast__msg";
+      msg.textContent = message;
+
+      var close = document.createElement("button");
+      close.type = "button";
+      close.className = "toast__close";
+      close.setAttribute("aria-label", "Dismiss notification");
+      close.innerHTML = "&times;";
+
+      el.appendChild(msg);
+      el.appendChild(close);
+      stack.appendChild(el);
+
+      // Enter animation on next frame so the transition fires
+      requestAnimationFrame(function () { el.classList.add("toast--show"); });
+
+      var closed = false;
+      function dismiss() {
+        if (closed) return;
+        closed = true;
+        el.classList.remove("toast--show");
+        el.classList.add("toast--leave");
+        setTimeout(function () {
+          if (el.parentNode) el.parentNode.removeChild(el);
+        }, 320);
+      }
+      close.addEventListener("click", dismiss);
+      if (timeout > 0) setTimeout(dismiss, timeout);
+      return dismiss;
+    }
+    // Remove any stale status element left behind by an older page cache
+    // or earlier build of this JS (defensive — new runs don't create one).
+    var stale = form.querySelector(".form__status");
+    if (stale && stale.parentNode) stale.parentNode.removeChild(stale);
+
+    function clearServerFieldErrors() {
+      form.querySelectorAll(".field .error").forEach(function (errorEl) {
+        if (errorEl.dataset.serverMessage) {
+          errorEl.textContent = errorEl.dataset.defaultMessage || "";
+          delete errorEl.dataset.serverMessage;
+        }
+      });
+      form.querySelectorAll(".field.invalid").forEach(function (f) { f.classList.remove("invalid"); });
+    }
+
+    // Resolve the API URL from the form's data-api-base attribute.
+    // Empty value = same-origin. Never hardcode a production domain here.
+    function apiUrl() {
+      var base = (form.getAttribute("data-api-base") || "").replace(/\/+$/, "");
+      return base + "/api/contact";
+    }
+
+    var submitting   = false;
+    var successShown = false;  // guards against duplicate success toasts
+
+    // Submit-button loading state: swap only the inner .btn__t text so
+    // the button keeps its stable dimensions, and add .is-loading so CSS
+    // can suppress the hover-fill animation and cursor change.
+    var submitBtn   = form.querySelector('button[type="submit"]');
+    var submitLabel = submitBtn && submitBtn.querySelector(".btn__t");
+
+    function setSubmitLoading(loading) {
+      if (!submitBtn) return;
+      if (loading) {
+        submitBtn.disabled = true;
+        submitBtn.setAttribute("aria-busy", "true");
+        submitBtn.classList.add("is-loading");
+        if (submitLabel) {
+          if (!submitLabel.dataset.restingText) {
+            submitLabel.dataset.restingText = submitLabel.textContent;
+          }
+          submitLabel.textContent = "Sending…";
+        }
+      } else {
+        submitBtn.disabled = false;
+        submitBtn.removeAttribute("aria-busy");
+        submitBtn.classList.remove("is-loading");
+        if (submitLabel && submitLabel.dataset.restingText) {
+          submitLabel.textContent = submitLabel.dataset.restingText;
+        }
+      }
+    }
+
     form.addEventListener("submit", function (e) {
       e.preventDefault();
+      if (submitting) return;
+
+      clearServerFieldErrors();
+
+      // Client-side gate
       var allOk = true;
-      fields.forEach(function (field) {
-        if (!validateField(field)) allOk = false;
-      });
+      fields.forEach(function (field) { if (!validateField(field)) allOk = false; });
       if (!allOk) {
         var firstBad = form.querySelector(".field.invalid input, .field.invalid select, .field.invalid textarea");
         if (firstBad) firstBad.focus();
         return;
       }
-      // Build a mailto so the inquiry is actually delivered on a static host
-      var to = form.getAttribute("data-mailto");
-      if (to) {
-        function val(id) {
-          var el = form.querySelector("#" + id);
-          return el && el.value ? el.value.trim() : "";
-        }
-        var name = val("name"), email = val("email"), company = val("company"),
-            phone = val("phone"), wtype = val("website-type"), pages = val("pages"),
-            budget = val("budget"), details = val("details"), pref = val("preferred");
-        var subject = "Project inquiry" + (name ? " — " + name : "");
-        var lines = [
-          "Name: " + name,
-          "Email: " + email,
-          "Company: " + company,
-          "Phone: " + phone,
-          "Website type: " + wtype,
-          "Estimated pages: " + pages,
-          "Budget range: " + budget,
-          "Preferred contact: " + pref,
-          "",
-          "Project details:",
-          details
-        ];
-        var href = "mailto:" + to +
-                   "?subject=" + encodeURIComponent(subject) +
-                   "&body=" + encodeURIComponent(lines.join("\n"));
-        window.location.href = href;
+
+      // Build payload — matches ContactInput's accepted shape
+      var payload = {
+        name:            getVal("name"),
+        email:           getVal("email"),
+        phone:           getVal("phone"),
+        company:         getVal("company"),
+        "website-type":  getVal("website-type"),
+        details:         getVal("details")
+      };
+
+      submitting = true;
+      form.classList.add("submitting");
+      setSubmitLoading(true);
+
+      function restore() {
+        submitting = false;
+        form.classList.remove("submitting");
+        setSubmitLoading(false);
       }
-      form.classList.add("sent");
-      var success = form.querySelector(".form__success");
-      if (success) success.classList.add("show");
+
+      // Older browsers without fetch should degrade gracefully rather than crash
+      if (typeof fetch !== "function") {
+        toast("Your browser does not support submitting this form. Please email us at info@nexumglobal.solutions.");
+        restore();
+        return;
+      }
+
+      fetch(apiUrl(), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept":       "application/json"
+        },
+        body:        JSON.stringify(payload),
+        credentials: "omit",
+        cache:       "no-store"
+      })
+        .then(function (res) {
+          return res.json()
+            .catch(function () { return {}; })
+            .then(function (data) { return { status: res.status, ok: res.ok, data: data || {} }; });
+        })
+        .then(function (resp) {
+          var status = resp.status;
+          var data   = resp.data || {};
+          if (status === 201 || (resp.ok && data.ok === true)) {
+            form.classList.add("sent");
+            var success = form.querySelector(".form__success");
+            if (success) success.classList.add("show");
+            // Only show the success toast on a confirmed 201 — and only
+            // once per form lifetime, so repeated resolver calls or
+            // cached responses cannot stack duplicates.
+            if (status === 201 && !successShown) {
+              successShown = true;
+              toast("Your inquiry has been submitted successfully!", { kind: "success" });
+            }
+            return;
+          }
+          if (status === 422 && data && data.fields) {
+            Object.keys(data.fields).forEach(function (k) { markServerError(k, data.fields[k]); });
+            var firstBad = form.querySelector(".field.invalid input, .field.invalid select, .field.invalid textarea");
+            if (firstBad) firstBad.focus();
+            toast((data && data.message) || "Please fix the highlighted fields and try again.");
+            return;
+          }
+          if (status === 429) {
+            toast((data && data.message) || "Too many submissions. Please try again later.");
+            return;
+          }
+          if (status === 413) {
+            toast("Your message is too long. Please shorten it and try again.");
+            return;
+          }
+          // 415, 500, anything else
+          toast((data && data.message) || "Something went wrong on our side. Please try again in a moment.");
+        })
+        .catch(function () {
+          // Network error, DNS failure, CORS block, aborted request
+          toast("Could not reach the server. Please check your connection and try again.");
+        })
+        .then(restore);  // finally-equivalent for broadest browser support
     });
   }
 

@@ -979,3 +979,120 @@ html.has-cursor select, html.has-cursor [contenteditable] { cursor: text !import
   .hero__aura span { animation: none; }
   .hero__title .word > i { opacity: 1; transform: none; }
 }
+
+/* =========================================================
+   Toast notifications — fixed top-right, auto-dismiss.
+   Used by the contact form for API/submission errors so the
+   form layout itself is never shifted by a status banner.
+   ========================================================= */
+.toast-stack {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+  max-width: calc(100vw - 40px);
+}
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 260px;
+  max-width: 380px;
+  padding: 14px 16px;
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: var(--radius);
+  border-left: 4px solid var(--accent);
+  box-shadow: var(--shadow);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  opacity: 0;
+  transform: translateX(16px);
+  transition: opacity 0.28s var(--ease), transform 0.28s var(--ease);
+}
+.toast--show  { opacity: 1; transform: translateX(0); }
+.toast--leave { opacity: 0; transform: translateX(16px); }
+.toast--error   { border-left-color: #c0392b; }
+.toast--success { border-left-color: #2a7a3a; }
+.toast__icon {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(42, 122, 58, 0.12);
+  color: #2a7a3a;
+}
+.toast__icon svg { display: block; width: 14px; height: 14px; }
+.toast__msg { flex: 1; word-wrap: break-word; overflow-wrap: anywhere; }
+.toast__close {
+  flex: none;
+  align-self: flex-start;
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 1.1rem;
+  line-height: 1;
+  border-radius: 4px;
+  transition: color 0.2s var(--ease), background 0.2s var(--ease);
+}
+.toast__close:hover { color: var(--ink); background: rgba(20, 27, 23, 0.06); }
+@media (max-width: 600px) {
+  .toast-stack { top: 12px; right: 12px; left: 12px; max-width: none; }
+  .toast { min-width: 0; max-width: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast        { transition: opacity 0.15s; transform: none; }
+  .toast--show  { transform: none; }
+  .toast--leave { transform: none; }
+}
+
+/* =========================================================
+   Form submit button: layout stability across every state
+   (rest / hover / focus / active / loading / submission).
+   Scoped to .form so the site-wide button hover lift is
+   unchanged for CTAs elsewhere on the site.
+   ========================================================= */
+.form .btn {
+  min-height: 50px;         /* reserve vertical space before any state swap */
+}
+.form .btn:hover,
+.form .btn:focus,
+.form .btn:active {
+  /* Override the global .btn:hover translate+scale so the form button
+     does not shift while the rest of the form stays visually anchored. */
+  transform: none;
+}
+.form .btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.form .btn[aria-busy="true"],
+.form .btn.is-loading,
+.form .btn[disabled] {
+  cursor: default;
+  opacity: 0.9;
+}
+.form .btn::before {
+  /* Remove the global button hover-fill pseudo-element inside the
+     form card entirely. Its growth to 320% width, combined with the
+     button's overflow:hidden, triggers paint + overflow recomputation
+     inside .form__body on every hover frame — which reads as the
+     whole card shaking. The subtle background-color + box-shadow
+     transition on .btn--primary:hover is the only hover feedback the
+     submit button needs. */
+  display: none;
+}
+.form .btn .btn__t {
+  position: relative;
+  z-index: 2;
+  display: inline-block;     /* stable baseline so text can't wobble */
+}

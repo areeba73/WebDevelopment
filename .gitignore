@@ -10,3 +10,12 @@ desktop.ini
 
 # logs
 *.log
+
+# API backend (PHP) — secrets and vendor stay out of Git
+/api/.env
+/api/.env.*
+!/api/.env.example
+/api/vendor/
+# Ignore log content, but keep the directory's .htaccess tracked
+/api/logs/*
+!/api/logs/.htaccess

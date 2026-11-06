@@ -1,0 +1,6 @@
+# Deny HTTP access to this directory.
+#
+# Runtime error logs live here. Under a correct docroot of api/public/,
+# this directory is already unreachable via HTTP; this .htaccess is a
+# belt-and-braces guard against docroot misconfiguration.
+Require all denied

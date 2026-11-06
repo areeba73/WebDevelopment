@@ -1,0 +1,18 @@
+# Never commit real environment or secrets
+/.env
+/.env.*
+!/.env.example
+
+# Composer-managed dependencies
+/vendor/
+
+# Runtime logs — ignore log content, but track the directory's .htaccess
+/logs/*
+!/logs/.htaccess
+*.log
+
+# Local IDE/OS artefacts
+/.idea/
+/.vscode/
+.DS_Store
+Thumbs.db

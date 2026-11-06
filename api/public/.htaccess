@@ -1,0 +1,37 @@
+# Apache config for the API's document root.
+# Point the webserver's docroot (or a subdomain) at this /api/public directory.
+
+Options -Indexes
+ServerSignature Off
+AddDefaultCharset UTF-8
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Block dotfiles (.env, .git, .htaccess from being served if misplaced)
+  RewriteRule "(^|/)\." - [F,L]
+
+  # Serve real files/directories as-is
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Everything else routes through index.php
+  RewriteRule ^ index.php [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+  # Belt-and-braces: core security headers (PHP also sets these per response)
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+
+  # Hide PHP version
+  Header unset X-Powered-By
+</IfModule>
+
+# Disable server-side includes and CGI execution outside PHP
+<FilesMatch "\.(env|ini|log|md|json|lock)$">
+  Require all denied
+</FilesMatch>

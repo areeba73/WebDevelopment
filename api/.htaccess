@@ -1,0 +1,9 @@
+# Belt-and-braces: this file sits at the API root. The correct webserver
+# docroot is api/public/. If the docroot is ever misconfigured to api/
+# itself, this .htaccess deny-all prevents the source tree, vendor files,
+# .env, logs and composer.* from being served.
+#
+# When docroot is correctly api/public/, this file is never read — Apache
+# only processes .htaccess files inside the docroot and below. Keeping
+# this file costs nothing and defends against a common deploy mistake.
+Require all denied
